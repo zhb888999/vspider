@@ -1,0 +1,5 @@
+aiofile
+aiohttp
+lxml
+m3u8
+pycryptodome
