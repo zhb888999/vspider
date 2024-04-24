@@ -1,18 +1,17 @@
 import asyncio
 from time import localtime, strftime
-from teleplay import ZBKYYYTeleplay
+from teleplay import ZBKYYYTeleplay, IJUJITVTeleplay
 from downloader import M3U8Downloader
 import os
 
-async def download(tv_id, save_dir, query_update=False):
+async def download(teleplay, save_dir, query_update=False):
     os.makedirs(save_dir, exist_ok=True)
-    teleplay = ZBKYYYTeleplay(tv_id)
     downloader = M3U8Downloader("tmp")
     download_size = len(list(filter(lambda value: value.endswith('.mp4'), os.listdir(save_dir))))
     await teleplay.initlize()
 
     while query_update:
-        if len(teleplay) > download_size:
+        if len(teleplay) > download_size and teleplay[-1]:
             break
         await teleplay.initlize()
         await asyncio.sleep(3)
@@ -29,11 +28,11 @@ async def download(tv_id, save_dir, query_update=False):
         if os.path.exists(mp4_file):
             continue
         for i in range(3):
-            try:
+            # try:
                 await downloader.download(uri, ts_file)
-                break
-            except Exception as e:
-                print(f"download {uri}=>{ts_file} as {e}, try {i}")
+            #     break
+            # except Exception as e:
+            #     print(f"download {uri}=>{ts_file} as {e}, try {i}")
 
         if os.path.exists(ts_file):
             os.system(generate_cmd(ts_file, mp4_file))
@@ -44,9 +43,16 @@ async def download(tv_id, save_dir, query_update=False):
         playsound('/home/mking/Music/chengdu.mp3')
 
 async def main():
-    # await download(8391, "陈情令")
-    await download(67856, "追风者", True)
+    # await download(ZBKYYYTeleplay(8391), "陈情令")
+    # await download(ZBKYYYTeleplay(67856), "追风者", True)
+    await download(IJUJITVTeleplay(54460), "承欢记", True)
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    while True:
+        try:
+            asyncio.run(main())
+            break
+        except:
+            continue
+

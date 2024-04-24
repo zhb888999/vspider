@@ -6,16 +6,16 @@ import asyncio
 import aiohttp
 
 
-class ZBKYYYTeleplay:
+class IJUJITVTeleplay:
     """
-    url: https://zbkyyy.com
+    url: https://v.ijujitv.cc
     """
 
     def __init__(self, url, playlist=None) -> None:
         self.hosturl = url
         self.playlist = playlist
         if isinstance(url, int):
-            self.hosturl = f"https://www.zbkyyy.com/qyvoddetail/{self.hosturl}.html"
+            self.hosturl = f"https://v.ijujitv.cc/detail/{self.hosturl}.html"
         self.name = ""
         self.info = {}
         self.episode_urls = None
@@ -42,10 +42,10 @@ class ZBKYYYTeleplay:
         for ul in uls:
             sub_html = html.tostring(ul)
             ul = html.fromstring(sub_html)
-            hrefs = ul.xpath('//a/@href')
+            hrefs = ul.xpath('//a/@href')[1:-1]
             if len(hrefs) > len(urls):
                 urls = hrefs
-                names = ul.xpath('//a/text()')
+                names = ul.xpath('//a/text()')[1:-1]
         return urls, names
     
     async def parse_teleplay(self):
@@ -55,17 +55,13 @@ class ZBKYYYTeleplay:
         parsed_html = html.fromstring(text)
 
         keys = ["影片名称"]
-        values = parsed_html.xpath('//div[@class="txt_intro_con"]//h1/text()')
+        values = parsed_html.xpath('//div[@class="albumDetailMain-right"]//h1/text()')
         self.name = values[0]
-        keys.extend(parsed_html.xpath('//div[@class="txt_intro_con"]//ul/li/em/text()'))
-        values.extend(parsed_html.xpath('//div[@class="txt_intro_con"]//ul/li/text()'))
-        keys.extend(parsed_html.xpath('//div[@class="txt_intro_con"]//ul/li/span/a/text()'))
-        values.extend(parsed_html.xpath('//div[@class="txt_intro_con"]//ul/li/span/text()'))
         for key, value in zip(keys, values):
             key = key.split('：')[0].strip()
             value = value.split('：')[-1].strip()
             self.info[key] = value
-        urls, names = self.get_max_episode_list(parsed_html.xpath('//div[@class="v_con_box"]//ul'))
+        urls, names = self.get_max_episode_list(parsed_html.xpath('//div[@class="tab-content stui-pannel_bd col-pd clearfix"]//ul'))
         urls = [urljoin(base_url, url) for url in urls]
         self.episode_urls = {name: url for name, url in zip(names, urls)}
         self.info["剧集"] = len(self.episode_urls)
@@ -74,7 +70,7 @@ class ZBKYYYTeleplay:
     async def parse_episode(self, name, url):
         text = await self.get_html(url)
         parsed_html = html.fromstring(text)
-        play_var_str = parsed_html.xpath('//div[@class="iplays"]/script/text()')[0]
+        play_var_str = parsed_html.xpath('//div[@class="playBox"]/script/text()')[0]
         play_info = json.loads(play_var_str.split('=')[1])
         self.episode_infos[name] = play_info
     
@@ -115,7 +111,7 @@ class ZBKYYYTeleplay:
 
 
 if __name__ == '__main__':
-    teleplay = ZBKYYYTeleplay(67856)
+    teleplay = IJUJITVTeleplay(54460)
     asyncio.run(teleplay.initlize())
     for k, v in teleplay.items():
         print(k, v)
